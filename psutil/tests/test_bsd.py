@@ -11,6 +11,7 @@
 
 
 import datetime
+import json
 import os
 import re
 import time
@@ -97,16 +98,24 @@ class BSDTestCase(PsutilTestCase):
         # test psutil.disk_usage() and psutil.disk_partitions()
         # against "df -a"
         def df(path):
-            out = sh('df -k "%s"' % path).strip()
-            lines = out.split('\n')
-            lines.pop(0)
-            line = lines.pop(0)
-            dev, total, used, free = line.split()[:4]
+            if FREEBSD:
+                info = json.loads(sh('df --libxo=json -k "%s"' % path))
+                stats = info['storage-system-information']['filesystem'][0]
+                dev = stats['name']
+                total = stats['total-blocks'] * 1024
+                used = stats['used-blocks'] * 1024
+                free = stats['available-blocks'] * 1024
+            else:
+                out = sh('df -k "%s"' % path).strip()
+                lines = out.split('\n')
+                lines.pop(0)
+                line = lines.pop(0)
+                dev, total, used, free = line.split()[:4]
+                total = int(total) * 1024
+                used = int(used) * 1024
+                free = int(free) * 1024
             if dev == 'none':
                 dev = ''
-            total = int(total) * 1024
-            used = int(used) * 1024
-            free = int(free) * 1024
             return dev, total, used, free
 
         for part in psutil.disk_partitions(all=False):
