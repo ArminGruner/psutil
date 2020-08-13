@@ -137,7 +137,7 @@ class BSDTestCase(PsutilTestCase):
             except RuntimeError:
                 pass
             else:
-                self.assertEqual(stats.isup, 'RUNNING' in out, msg=out)
+                self.assertEqual(stats.isup, 'UP' in out, msg=out)
                 if "mtu" in out:
                     self.assertEqual(stats.mtu,
                                      int(re.findall(r'mtu (\d+)', out)[0]))
